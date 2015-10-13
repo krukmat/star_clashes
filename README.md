@@ -1,2 +1,2 @@
 # star_clashes
-Star clashes. Like a star craft but more like clash of clans :p
+Star clashes. Like a starcraft but with a touch of clash of clans and game of fire :p
