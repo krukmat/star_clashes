@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+    <title>Phaser - Making your first game, part 9</title>
+	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script type="text/javascript" src="lib/phaser.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+var height = $(document).height();
+var width = $(document).width();
+
+var game = new Phaser.Game(width, height, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+
+
+function preload() {
+    game.load.image('background', 'assets/asteroidBack.png', 2273, 1304);
+    game.load.image('space', 'assets/space.jpg', 2273, 1304);
+    game.load.atlasJSONHash('bot', 'assets/running_bot/view.png', 'assets/running_bot/logic.json');
+    game.load.atlasJSONHash('machine_gun', 'assets/machine_gun/view.png', 'assets/machine_gun/logic.json');
+    game.load.atlasJSONHash('sentry_gun', 'assets/sentry_gun/view.png', 'assets/sentry_gun/logic.json');
+    game.load.atlasJSONHash('rocket', 'assets/rocket/view.png', 'assets/rocket/logic.json');
+
+    game.load.spritesheet('lab', 'assets/lab/view.png', 180, 149);
+    game.load.spritesheet('farm', 'assets/farm/view.png', 180, 149);
+    game.load.spritesheet('craft', 'assets/craft/view.png', 180, 149);
+    game.load.spritesheet('oreStore', 'assets/oreStore/view.png', 180, 149);
+    game.load.spritesheet('miner', 'assets/miner/view.png', 180, 138);
+    game.load.spritesheet('HQ', 'assets/HQ/view.png', 180, 138);
+}
+
+var player;
+var platforms;
+var cursors;
+var lastKey = 'right';
+
+var stars;
+var scorePlayer = 0;
+var scoreDog = 0;
+var scoreText;
+var start = false;
+var robot;
+var state;
+
+function createRobot(){
+    var s =game.add.sprite(400, 400, 'bot');
+    s.scale.setTo(0.6, 0.6);
+
+    s.animations.add('run');
+    s.animations.play('run', 10, true);
+    return s;
+}
+
+function createSprite(x,y, sprite) {
+    var s =game.add.sprite(x, y , sprite);
+    s.scale.setTo(0.5, 0.5);
+    s.animations.add('spinning', Phaser.Animation.generateFrameNames('Spinning__', 1, 8, '', 3), 40, false, false);
+    s.animations.currentAnim.onComplete.add(function () {
+        console.log('stop');
+        s.animations.stop();
+    }, this);
+    s.play('spinning', 10, true);
+    return s;
+}
+
+function createBuilding(x,y, name) {
+    var s = game.add.sprite(x, y , name);
+    s.scale.setTo(0.5, 0.5);
+    return s;
+}
+
+function create() {
+
+    //  We're going to be using physics, so enable the Arcade Physics system
+    // game.physics.startSystem(Phaser.Physics.P2JS);
+
+    //  A simple background for our game
+    var background = game.add.sprite(0, 0, 'background');
+    background.scale.setTo(0.6, 0.6);
+
+    robot = createRobot();
+    machine = createSprite(300, 400, 'machine_gun');
+    for (i=0;i<10;i++)
+        sentry = createSprite(game.world.randomX, game.world.randomY, 'sentry_gun');
+    rocket = createSprite(300, 200, 'rocket');
+    lab = createBuilding(40,250, 'lab');
+    farm = createBuilding(40, 400, 'farm');
+    craft = createBuilding(40, 100, 'craft');
+    oreStore = createBuilding(40, 120, 'oreStore');
+    miner = createBuilding(40, 200, 'miner');
+    miner = createBuilding(40, 300, 'HQ');
+
+    //game.physics.p2.enable([robot]);
+
+    //  Our controls.
+    cursors = game.input.keyboard.createCursorKeys();
+
+}
+
+
+function update() {
+}
+
+
+</script>
+
+</body>
+</html>
