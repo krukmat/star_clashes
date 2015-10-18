@@ -5,6 +5,7 @@
     <title>Phaser - Making your first game, part 9</title>
 	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script type="text/javascript" src="lib/phaser.min.js"></script>
+    <script type="text/javascript" src="logic/bullets.js"></script>
     <style type="text/css">
         body {
             margin: 0;
@@ -36,6 +37,13 @@ function preload() {
     game.load.spritesheet('oreStore', 'assets/oreStore/view.png', 180, 149);
     game.load.spritesheet('miner', 'assets/miner/view.png', 180, 138);
     game.load.spritesheet('HQ', 'assets/HQ/view.png', 180, 138);
+
+
+    // Bullets loading up
+    for (var i = 1; i <= 11; i++)
+    {
+                this.load.image('bullet' + i, 'assets/bullets/bullet' + i + '.png');
+    }
 }
 
 var player;
@@ -57,10 +65,12 @@ function createRobot(){
 
     s.animations.add('run');
     s.animations.play('run', 10, true);
+    game.physics.arcade.enable(s);
+    s.body.collideWorldBounds = true;
     return s;
 }
 
-function createSprite(x,y, sprite) {
+function createSprite(x,y, sprite, bulletType) {
     var s =game.add.sprite(x, y , sprite);
     s.scale.setTo(0.5, 0.5);
     s.animations.add('spinning', Phaser.Animation.generateFrameNames('Spinning__', 1, 8, '', 3), 40, false, false);
@@ -69,6 +79,7 @@ function createSprite(x,y, sprite) {
         s.animations.stop();
     }, this);
     s.play('spinning', 10, true);
+    s.bulletType = bulletType;
     return s;
 }
 
@@ -81,25 +92,25 @@ function createBuilding(x,y, name) {
 function create() {
 
     //  We're going to be using physics, so enable the Arcade Physics system
-    // game.physics.startSystem(Phaser.Physics.P2JS);
+    game.physics.startSystem(Phaser.Physics.ARCADE);
 
     //  A simple background for our game
     var background = game.add.sprite(0, 0, 'background');
     background.scale.setTo(0.6, 0.6);
 
     robot = createRobot();
-    machine = createSprite(300, 400, 'machine_gun');
-    for (i=0;i<10;i++)
-        sentry = createSprite(game.world.randomX, game.world.randomY, 'sentry_gun');
-    rocket = createSprite(300, 200, 'rocket');
+    machine = createSprite(300, 400, 'machine_gun', new Weapon.SingleBullet(game));
+    //for (i=0;i<10;i++)
+    //sentry = createSprite(game.world.randomX, game.world.randomY, 'sentry_gun', new Weapon.SingleBullet(game));
+    rocket = createSprite(300, 200, 'rocket', new Weapon.Rockets(game));
     lab = createBuilding(40,250, 'lab');
     farm = createBuilding(40, 400, 'farm');
     craft = createBuilding(40, 100, 'craft');
     oreStore = createBuilding(40, 120, 'oreStore');
     miner = createBuilding(40, 200, 'miner');
-    miner = createBuilding(40, 300, 'HQ');
+    hq = createBuilding(40, 300, 'HQ');
 
-    //game.physics.p2.enable([robot]);
+    //game.physics.p2.enable([robot, rocket, machine, robot]);
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
@@ -108,6 +119,15 @@ function create() {
 
 
 function update() {
+    // game.physics.arcade.collide(machine.bulletType, player);
+    game.physics.arcade.overlap(robot, machine.bulletType, shootYou, null, this);
+    rocket.bulletType.fire(rocket);
+    machine.bulletType.fire(machine);
+}
+
+function shootYou(player, bulletType) {
+    console.log(bulletType);
+    //robot.kill();
 }
 
 
