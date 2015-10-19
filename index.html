@@ -26,6 +26,7 @@ var game = new Phaser.Game(width, height, Phaser.AUTO, '', { preload: preload, c
 function preload() {
     game.load.image('background', 'assets/asteroidBack.png', 2273, 1304);
     game.load.image('space', 'assets/space.jpg', 2273, 1304);
+
     game.load.atlasJSONHash('bot', 'assets/running_bot/view.png', 'assets/running_bot/logic.json');
     game.load.atlasJSONHash('machine_gun', 'assets/machine_gun/view.png', 'assets/machine_gun/logic.json');
     game.load.atlasJSONHash('sentry_gun', 'assets/sentry_gun/view.png', 'assets/sentry_gun/logic.json');
@@ -42,7 +43,7 @@ function preload() {
     // Bullets loading up
     for (var i = 1; i <= 11; i++)
     {
-                this.load.image('bullet' + i, 'assets/bullets/bullet' + i + '.png');
+        this.load.image('bullet' + i, 'assets/bullets/bullet' + i + '.png');
     }
 }
 
@@ -51,6 +52,7 @@ var platforms;
 var cursors;
 var lastKey = 'right';
 
+var countKiller = 0;
 var stars;
 var scorePlayer = 0;
 var scoreDog = 0;
@@ -70,14 +72,32 @@ function createRobot(){
     return s;
 }
 
+function checkFrame(anim) {
+    var weaponAngle = parseInt(anim.currentFrame.name.replace('Spinning__', ''));
+    anim._parent.bulletType.fire(anim._parent, anim._parent.bulletType.weaponOrdering[weaponAngle-1]);
+}
+
+function shootYou(player, bulletType) {
+    countKiller +=  1;
+    console.log(countKiller);
+    //robot.kill();
+
+}
+
 function createSprite(x,y, sprite, bulletType) {
     var s =game.add.sprite(x, y , sprite);
     s.scale.setTo(0.5, 0.5);
-    s.animations.add('spinning', Phaser.Animation.generateFrameNames('Spinning__', 1, 8, '', 3), 40, false, false);
-    s.animations.currentAnim.onComplete.add(function () {
-        console.log('stop');
-        s.animations.stop();
-    }, this);
+    var anim = s.animations.add('spinning', Phaser.Animation.generateFrameNames('Spinning__', 1, 1, '', 3), 40, false, false);
+    anim.enableUpdate = true;
+    anim.onUpdate.add(checkFrame, anim);
+    s.animations.add('180', Phaser.Animation.generateFrameNames('Spinning__', 1, 1, '', 3), 40, false, false); // 180º
+    s.animations.add('135', Phaser.Animation.generateFrameNames('Spinning__', 2, 2, '', 3), 40, false, false); // 135º
+    s.animations.add('90', Phaser.Animation.generateFrameNames('Spinning__', 3, 3, '', 3), 40, false, false); // 90º
+    s.animations.add('45', Phaser.Animation.generateFrameNames('Spinning__', 4, 4, '', 3), 40, false, false); // 45º
+    s.animations.add('0', Phaser.Animation.generateFrameNames('Spinning__', 5, 5, '', 3), 40, false, false); // 0º
+    s.animations.add('315', Phaser.Animation.generateFrameNames('Spinning__', 6, 6, '', 3), 40, false, false); // 315º
+    s.animations.add('270', Phaser.Animation.generateFrameNames('Spinning__', 7, 7, '', 3), 40, false, false); // 270º
+    s.animations.add('225', Phaser.Animation.generateFrameNames('Spinning__', 8, 8, '', 3), 40, false, false); // 225º
     s.play('spinning', 10, true);
     s.bulletType = bulletType;
     return s;
@@ -99,10 +119,10 @@ function create() {
     background.scale.setTo(0.6, 0.6);
 
     robot = createRobot();
-    machine = createSprite(300, 400, 'machine_gun', new Weapon.SingleBullet(game));
+    //machine = createSprite(100, 400, 'machine_gun', new Weapon.SingleBullet(game));
     //for (i=0;i<10;i++)
-    //sentry = createSprite(game.world.randomX, game.world.randomY, 'sentry_gun', new Weapon.SingleBullet(game));
-    rocket = createSprite(300, 200, 'rocket', new Weapon.Rockets(game));
+    sentry = createSprite(game.world.randomX, game.world.randomY, 'sentry_gun', new Weapon.SingleBullet(game));
+    //rocket = createSprite(300, 400, 'rocket', new Weapon.Rockets(game));
     lab = createBuilding(40,250, 'lab');
     farm = createBuilding(40, 400, 'farm');
     craft = createBuilding(40, 100, 'craft');
@@ -119,15 +139,7 @@ function create() {
 
 
 function update() {
-    // game.physics.arcade.collide(machine.bulletType, player);
-    game.physics.arcade.overlap(robot, machine.bulletType, shootYou, null, this);
-    rocket.bulletType.fire(rocket);
-    machine.bulletType.fire(machine);
-}
-
-function shootYou(player, bulletType) {
-    console.log(bulletType);
-    //robot.kill();
+    //game.physics.arcade.overlap(robot, rocket.bulletType, shootYou, null, this);
 }
 
 
