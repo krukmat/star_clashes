@@ -69,6 +69,7 @@ function createRobot(x,y){
     s.animations.play('run', 10, true);
     game.physics.arcade.enable(s);
     s.body.collideWorldBounds = true;
+    s.gun = new Weapon.SingleBullet(game);
     return s;
 }
 
@@ -153,6 +154,10 @@ function controlRobot(){
         {
             robot.y += 4;
         }
+        if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
+        {
+            robot.gun.fire(robot, 180);
+        }
 }
 
 function killStructure(weapon, player){
@@ -162,8 +167,8 @@ function killStructure(weapon, player){
 function update() {
     game.physics.arcade.overlap(robot, rocket.bulletType, shootYou, null, this);
     game.physics.arcade.overlap(robot, sentry.bulletType, shootYou, null, this);
-    game.physics.arcade.overlap(sentry, robot, killStructure, null, this);
-    game.physics.arcade.overlap(rocket, robot, killStructure, null, this);
+    game.physics.arcade.overlap(sentry, robot.gun, killStructure, null, this);
+    game.physics.arcade.overlap(rocket, robot.gun, killStructure, null, this);
     controlRobot();
 }
 
