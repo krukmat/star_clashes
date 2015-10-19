@@ -87,7 +87,7 @@ function shootYou(player, bulletType) {
 function createSprite(x,y, sprite, bulletType) {
     var s =game.add.sprite(x, y , sprite);
     s.scale.setTo(0.5, 0.5);
-    var anim = s.animations.add('spinning', Phaser.Animation.generateFrameNames('Spinning__', 1, 1, '', 3), 40, false, false);
+    var anim = s.animations.add('spinning', Phaser.Animation.generateFrameNames('Spinning__', 1, 8, '', 3), 40, false, false);
     anim.enableUpdate = true;
     anim.onUpdate.add(checkFrame, anim);
     s.animations.add('180', Phaser.Animation.generateFrameNames('Spinning__', 1, 1, '', 3), 40, false, false); // 180º
@@ -120,9 +120,8 @@ function create() {
 
     robot = createRobot();
     //machine = createSprite(100, 400, 'machine_gun', new Weapon.SingleBullet(game));
-    //for (i=0;i<10;i++)
-    sentry = createSprite(game.world.randomX, game.world.randomY, 'sentry_gun', new Weapon.SingleBullet(game));
-    //rocket = createSprite(300, 400, 'rocket', new Weapon.Rockets(game));
+    sentry = createSprite(300, 500, 'sentry_gun', new Weapon.SingleBullet(game));
+    rocket = createSprite(300, 400, 'rocket', new Weapon.Rockets(game));
     lab = createBuilding(40,250, 'lab');
     farm = createBuilding(40, 400, 'farm');
     craft = createBuilding(40, 100, 'craft');
