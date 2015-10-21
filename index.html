@@ -73,6 +73,7 @@ function createRobot(x,y,weapon){
     s.animations.play('run', 10, true);
     game.physics.arcade.enable(s);
     s.body.collideWorldBounds = true;
+    s.body.allowRotation = true;
     s.gun = weapon;
     return s;
 }
@@ -137,21 +138,33 @@ function create() {
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    createLevel(1);
-    // TODO: giro del robot?
+    createLevel(0);
     robot = createRobot(0, 0, new Weapon.SingleBullet(game));
     cursors = game.input.keyboard.createCursorKeys();
 
 }
+var wasLeft = 1;
+var wasRight = -1;
+var angle = 180;
 
 function controlRobot(){
         if (game.input.keyboard.isDown(Phaser.Keyboard.LEFT))
         {
             robot.x -= 4;
+            if (wasRight)
+                robot.scale.x *= -1;
+            wasLeft = true;
+            wasRight = false;
+            angle = 180;
         }
         else if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT))
         {
             robot.x += 4;
+            if (wasLeft)
+                robot.scale.x *= -1;
+            wasRight = true;
+            wasLeft = false;
+            angle = 0;
         }
 
         if (game.input.keyboard.isDown(Phaser.Keyboard.UP))
@@ -164,7 +177,7 @@ function controlRobot(){
         }
         if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
         {
-            robot.gun.fire(robot, 180);
+            robot.gun.fire(robot, angle);
         }
 }
 
@@ -175,6 +188,7 @@ function killStructure(structure, player){
 function update() {
     for (defense in defenses){
         game.physics.arcade.overlap(robot, defenses[defense].bulletType, shootYou, null, this);
+        game.physics.arcade.overlap(defenses[defense], robot.gun, killStructure, null, this);
     }
     for (building in buildings){
         game.physics.arcade.overlap(buildings[building], robot.gun, killStructure, null, this);
