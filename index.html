@@ -48,7 +48,6 @@ function preload() {
 }
 
 var player;
-var platforms;
 var cursors;
 var lastKey = 'right';
 
@@ -60,6 +59,11 @@ var scoreText;
 var start = false;
 var robot;
 var state;
+var levels = [{ buildings:{HQ:1, miner: 2, oreStore: 4, craft: 5, lab: 2, farm: 4}, defenses:{rocket: 1, sentry_gun: 1}},
+              { buildings:{HQ:1, miner: 2, oreStore: 4, craft: 5, lab: 2, farm: 4}, defenses:{rocket: 4, sentry_gun: 5}}
+             ]
+var defenses = [];
+var buildings = []
 
 function createRobot(x,y,weapon){
     var s =game.add.sprite(x, y, 'bot');
@@ -75,6 +79,7 @@ function createRobot(x,y,weapon){
 
 function checkFrame(anim) {
     var weaponAngle = parseInt(anim.currentFrame.name.replace('Spinning__', ''));
+    // TODO: El ordering tendria que estar en el arma y no en la bala
     anim._parent.bulletType.fire(anim._parent, anim._parent.bulletType.weaponOrdering[weaponAngle-1]);
 }
 
@@ -89,14 +94,6 @@ function createSprite(x,y, sprite, bulletType) {
     var anim = s.animations.add('spinning', Phaser.Animation.generateFrameNames('Spinning__', 1, 8, '', 3), 40, false, false);
     anim.enableUpdate = true;
     anim.onUpdate.add(checkFrame, anim);
-    s.animations.add('180', Phaser.Animation.generateFrameNames('Spinning__', 1, 1, '', 3), 40, false, false); // 180º
-    s.animations.add('135', Phaser.Animation.generateFrameNames('Spinning__', 2, 2, '', 3), 40, false, false); // 135º
-    s.animations.add('90', Phaser.Animation.generateFrameNames('Spinning__', 3, 3, '', 3), 40, false, false); // 90º
-    s.animations.add('45', Phaser.Animation.generateFrameNames('Spinning__', 4, 4, '', 3), 40, false, false); // 45º
-    s.animations.add('0', Phaser.Animation.generateFrameNames('Spinning__', 5, 5, '', 3), 40, false, false); // 0º
-    s.animations.add('315', Phaser.Animation.generateFrameNames('Spinning__', 6, 6, '', 3), 40, false, false); // 315º
-    s.animations.add('270', Phaser.Animation.generateFrameNames('Spinning__', 7, 7, '', 3), 40, false, false); // 270º
-    s.animations.add('225', Phaser.Animation.generateFrameNames('Spinning__', 8, 8, '', 3), 40, false, false); // 225º
     s.play('spinning', 10, true);
     s.bulletType = bulletType;
     s.enableBody = true;
@@ -114,28 +111,35 @@ function createBuilding(x,y, name) {
     return s;
 }
 
+function createLevel(number) {
+   var currentLevel = levels[number];
+   var background = game.add.sprite(0, 0, 'background');
+   background.scale.setTo(0.6, 0.6);
+   for (var key in currentLevel.buildings) {
+       for (var i=0; i< currentLevel.buildings[key]; i++)
+           buildings.push(createBuilding(game.world.randomX, game.world.randomY, key));
+   }
+   var gun;
+   for (var key in currentLevel.defenses) {
+       // TODO Crear el tipo Weapon y meter el tipo de bullet ahi
+       for (var i=0; i< currentLevel.defenses[key]; i++){
+           if (key === 'sentry_gun')
+               gun = new Weapon.SingleBullet(game);
+           else
+               gun = new Weapon.Rockets(game)
+           defenses.push(createSprite(game.world.randomX, game.world.randomY, key, gun));
+       }
+   }
+}
+
 function create() {
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    //  A simple background for our game
-    var background = game.add.sprite(0, 0, 'background');
-    background.scale.setTo(0.6, 0.6);
-
-    robot = createRobot(400, 300, new Weapon.SingleBullet(game));
-    //machine = createSprite(100, 400, 'machine_gun', new Weapon.SingleBullet(game));
-    sentry = createSprite(300, 500, 'sentry_gun', new Weapon.SingleBullet(game));
-    rocket = createSprite(300, 400, 'rocket', new Weapon.Rockets(game));
-    lab = createBuilding(40,250, 'lab');
-    farm = createBuilding(40, 400, 'farm');
-    craft = createBuilding(40, 100, 'craft');
-    oreStore = createBuilding(40, 120, 'oreStore');
-    miner = createBuilding(40, 200, 'miner');
-    hq = createBuilding(40, 300, 'HQ');
-
-
-    //  Our controls.
+    createLevel(1);
+    // TODO: giro del robot?
+    robot = createRobot(0, 0, new Weapon.SingleBullet(game));
     cursors = game.input.keyboard.createCursorKeys();
 
 }
@@ -169,16 +173,13 @@ function killStructure(structure, player){
 }
 
 function update() {
-    game.physics.arcade.overlap(robot, rocket.bulletType, shootYou, null, this);
-    game.physics.arcade.overlap(robot, sentry.bulletType, shootYou, null, this);
-    game.physics.arcade.overlap(sentry, robot.gun, killStructure, null, this);
-    game.physics.arcade.overlap(rocket, robot.gun, killStructure, null, this);
-    game.physics.arcade.overlap(farm, robot.gun, killStructure, null, this);
-    game.physics.arcade.overlap(lab, robot.gun, killStructure, null, this);
-    game.physics.arcade.overlap(craft, robot.gun, killStructure, null, this);
-    game.physics.arcade.overlap(oreStore, robot.gun, killStructure, null, this);
-    game.physics.arcade.overlap(miner, robot.gun, killStructure, null, this);
-    game.physics.arcade.overlap(hq, robot.gun, killStructure, null, this);
+    for (defense in defenses){
+        game.physics.arcade.overlap(robot, defenses[defense].bulletType, shootYou, null, this);
+    }
+    for (building in buildings){
+        game.physics.arcade.overlap(buildings[building], robot.gun, killStructure, null, this);
+    }
+
     controlRobot();
 }
 
