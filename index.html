@@ -40,11 +40,14 @@ function preload() {
     game.load.spritesheet('miner', 'assets/miner/view.png', 180, 138);
     game.load.spritesheet('HQ', 'assets/HQ/view.png', 180, 138);
 
+    game.load.spritesheet('baddie', 'assets/baddie.png', 32, 32);
+    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+
 
     // Bullets loading up
     for (var i = 1; i <= 11; i++)
     {
-        this.load.image('bullet' + i, 'assets/bullets/bullet' + i + '.png');
+        game.load.image('bullet' + i, 'assets/bullets/bullet' + i + '.png');
     }
 }
 
@@ -65,42 +68,13 @@ var levels = [{ buildings:{HQ:1, miner: 2, oreStore: 4, craft: 5, lab: 2, farm: 
              ]
 var defenses = [];
 var buildings = [];
+var aBot;
 
-
-function createRobot(x,y,weapon){
-    var s =game.add.sprite(x, y, 'bot');
-    s.scale.setTo(0.6, 0.6);
-
-    s.animations.add('run');
-    s.animations.play('run', 10, true);
-    game.physics.arcade.enable(s);
-    s.body.collideWorldBounds = true;
-    s.body.allowRotation = true;
-    s.gun = weapon;
-    s.health = 0;
-    var barConfig = {x: x, y: y, width: 50, height: 10, flipped: false};
-    myHealthBar = new HealthBar(game, barConfig);
-    myHealthBar.setPercent(0);
-    s.healthbar = myHealthBar;
-    return s;
-}
 
 function checkFrame(anim) {
     var weaponAngle = parseInt(anim.currentFrame.name.replace('Spinning__', ''));
     // TODO: El ordering tendria que estar en el arma y no en la bala
     anim._parent.bulletType.fire(anim._parent, anim._parent.bulletType.weaponOrdering[weaponAngle-1]);
-}
-
-function shootYou(player, bulletType) {
-    if (player.health < 100) {
-        player.health += 1;
-        player.healthbar.setPercent(player.health);
-        bulletType.kill();
-    } else {
-        player.healthbar.clear();
-        player.kill();
-        location.reload();
-    }
 }
 
 function createSprite(x,y, sprite, bulletType) {
@@ -127,8 +101,6 @@ function createSprite(x,y, sprite, bulletType) {
 function createBuilding(x,y, name) {
     var s = game.add.sprite(x, y , name);
     s.scale.setTo(0.5, 0.5);
-    s.enableBody = true;
-    s.checkWorldBounds = true;
     var barConfig = {x: x, y: y, width: 50, height: 10, flipped: false, bar: {
       color: '#00FF00'
     },};
@@ -137,6 +109,12 @@ function createBuilding(x,y, name) {
     s.healthbar = myHealthBar;
     s.health = 0;
     game.physics.arcade.enable(s);
+    s.body.collideWorldBounds = true;
+    s.body.allowRotation = true;
+    s.body.bounce.y = 0.3;
+    s.body.bounce.x = 0.5;
+    s.body.collideWorldBounds = true;
+
     return s;
 }
 
@@ -161,16 +139,57 @@ function createLevel(number) {
    }
 }
 
+function createRobot(x,y,weapon){
+    var s =game.add.sprite(x, y, 'bot');
+    s.scale.setTo(0.6, 0.6);
+
+    s.animations.add('run');
+    s.animations.play('run', 10, true);
+    game.physics.arcade.enable(s);
+
+    s.body.collideWorldBounds = true;
+    s.body.allowRotation = true;
+    s.gun = weapon;
+    s.health = 0;
+    var barConfig = {x: x, y: y, width: 50, height: 10, flipped: false};
+    myHealthBar = new HealthBar(game, barConfig);
+    myHealthBar.setPercent(0);
+    s.healthbar = myHealthBar;
+    return s;
+}
+
+
+
 function create() {
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
     createLevel(0);
-
     robot = createRobot(100, 100, new Weapon.SingleBullet(game));
     cursors = game.input.keyboard.createCursorKeys();
 
 }
+
+/*function create() {
+
+    //  We're going to be using physics, so enable the Arcade Physics system
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+    aBot = game.add.sprite(0, 50 , 'dude');
+    game.physics.arcade.enable(aBot);
+
+    robot = game.add.sprite(0, 100 , 'baddie');
+    game.physics.arcade.enable(robot);
+
+    robot.body.bounce.y = 0.3;
+    robot.body.collideWorldBounds = true;
+
+    aBot.body.bounce.y = 0.3;
+    aBot.body.collideWorldBounds = true;
+
+    cursors = game.input.keyboard.createCursorKeys();
+
+}*/
+
 var wasLeft = 1;
 var wasRight = -1;
 var angle = 180;
@@ -207,33 +226,57 @@ function controlRobot(){
         {
             robot.gun.fire(robot, angle);
         }
-        robot.healthbar.setPosition(robot.x, robot.y - 10);
+        if (robot.healthbar)
+            robot.healthbar.setPosition(robot.x, robot.y - 10);
 }
+
+
+function shootYou(player, bulletType) {
+    if (player.health < 100) {
+        player.health += bulletType.parent.damageRate;
+        player.healthbar.setPercent(player.health);
+        bulletType.kill();
+    } else {
+        player.healthbar.clear();
+        player.kill();
+        location.reload();
+    }
+}
+
 
 function killStructure(structure, player){
     if (structure.health < 100) {
-        structure.health += 10;
+        structure.health += player.parent.damageRate;
         structure.healthbar.setPercent(structure.health);
     } else {
         structure.healthbar.clear();
         structure.kill();
     }
     player.kill();
+}
 
+function checkCollide() {
+    console.log('collide');
 }
 
 function update() {
+    game.physics.arcade.collide(aBot, robot, checkCollide);
     for (defense in defenses){
         game.physics.arcade.overlap(robot, defenses[defense].bulletType, shootYou, null, this);
         game.physics.arcade.overlap(defenses[defense], robot.gun, killStructure, null, this);
     }
     for (building in buildings){
-        game.physics.arcade.collide(buildings[building], robot);
+        game.physics.arcade.collide(buildings[building], robot, checkCollide);
         game.physics.arcade.overlap(buildings[building], robot.gun, killStructure, null, this);
     }
 
     controlRobot();
 }
+
+/*function update() {
+    game.physics.arcade.collide(aBot, robot, checkCollide);
+    controlRobot();
+}*/
 
 
 </script>

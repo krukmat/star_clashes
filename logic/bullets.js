@@ -70,6 +70,7 @@
         this.fireRate = 100;
         this.enableBody = true;
         this.weaponOrdering = [-90, -45, 0, -315, -270, -225, -180, -135];
+        this.damageRate = 3;
 
         for (var i = 0; i < 64; i++)
         {
@@ -392,6 +393,7 @@
         this.nextFire = 0;
         this.bulletSpeed = 400;
         this.fireRate = 250;
+        this.damageRate = 10;
 
         for (var i = 0; i < 32; i++)
         {
