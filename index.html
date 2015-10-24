@@ -64,7 +64,8 @@ var levels = [{ buildings:{HQ:1, miner: 2, oreStore: 4, craft: 5, lab: 2, farm: 
               { buildings:{HQ:1, miner: 2, oreStore: 4, craft: 5, lab: 2, farm: 4}, defenses:{rocket: 4, sentry_gun: 5}}
              ]
 var defenses = [];
-var buildings = []
+var buildings = [];
+
 
 function createRobot(x,y,weapon){
     var s =game.add.sprite(x, y, 'bot');
@@ -77,7 +78,7 @@ function createRobot(x,y,weapon){
     s.body.allowRotation = true;
     s.gun = weapon;
     s.health = 0;
-    var barConfig = {x: 70, y: 70, width: 50, height: 10, flipped: false};
+    var barConfig = {x: x, y: y, width: 50, height: 10, flipped: false};
     myHealthBar = new HealthBar(game, barConfig);
     myHealthBar.setPercent(0);
     s.healthbar = myHealthBar;
@@ -93,11 +94,11 @@ function checkFrame(anim) {
 function shootYou(player, bulletType) {
     if (player.health < 100) {
         player.health += 1;
-        myHealthBar.setPercent(player.health);
+        player.healthbar.setPercent(player.health);
         bulletType.kill();
     } else {
+        player.healthbar.clear();
         player.kill();
-        myHealthBar.clear();
         location.reload();
     }
 }
@@ -112,6 +113,13 @@ function createSprite(x,y, sprite, bulletType) {
     s.bulletType = bulletType;
     s.enableBody = true;
     s.checkWorldBounds = true;
+    var barConfig = {x: x, y: y, width: 50, height: 10, flipped: false, bar: {
+      color: '#0000FF'
+    },};
+    myHealthBar = new HealthBar(game, barConfig);
+    myHealthBar.setPercent(0);
+    s.healthbar = myHealthBar;
+    s.health = 0;
     game.physics.arcade.enable(s);
     return s;
 }
@@ -121,6 +129,13 @@ function createBuilding(x,y, name) {
     s.scale.setTo(0.5, 0.5);
     s.enableBody = true;
     s.checkWorldBounds = true;
+    var barConfig = {x: x, y: y, width: 50, height: 10, flipped: false, bar: {
+      color: '#00FF00'
+    },};
+    myHealthBar = new HealthBar(game, barConfig);
+    myHealthBar.setPercent(0);
+    s.healthbar = myHealthBar;
+    s.health = 0;
     game.physics.arcade.enable(s);
     return s;
 }
@@ -196,8 +211,15 @@ function controlRobot(){
 }
 
 function killStructure(structure, player){
-    structure.kill();
+    if (structure.health < 100) {
+        structure.health += 10;
+        structure.healthbar.setPercent(structure.health);
+    } else {
+        structure.healthbar.clear();
+        structure.kill();
+    }
     player.kill();
+
 }
 
 function update() {
