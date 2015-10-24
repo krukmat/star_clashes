@@ -77,6 +77,10 @@ function createRobot(x,y,weapon){
     s.body.allowRotation = true;
     s.gun = weapon;
     s.health = 0;
+    var barConfig = {x: 70, y: 70, width: 50, height: 10, flipped: false};
+    myHealthBar = new HealthBar(game, barConfig);
+    myHealthBar.setPercent(0);
+    s.healthbar = myHealthBar;
     return s;
 }
 
@@ -146,10 +150,8 @@ function create() {
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
-    var barConfig = {x: 70, y: 70, width: 50, height: 10, flipped: false};
     createLevel(0);
-    myHealthBar = new HealthBar(game, barConfig);
-    myHealthBar.setPercent(0);
+
     robot = createRobot(100, 100, new Weapon.SingleBullet(game));
     cursors = game.input.keyboard.createCursorKeys();
 
@@ -190,8 +192,7 @@ function controlRobot(){
         {
             robot.gun.fire(robot, angle);
         }
-        //myHealthBar.clear();
-        myHealthBar.setPosition(robot.x, robot.y - 10);
+        robot.healthbar.setPosition(robot.x, robot.y - 10);
 }
 
 function killStructure(structure, player){
@@ -205,6 +206,7 @@ function update() {
         game.physics.arcade.overlap(defenses[defense], robot.gun, killStructure, null, this);
     }
     for (building in buildings){
+        game.physics.arcade.collide(buildings[building], robot);
         game.physics.arcade.overlap(buildings[building], robot.gun, killStructure, null, this);
     }
 
