@@ -90,6 +90,7 @@ function shootYou(player, bulletType) {
     if (player.health < 100) {
         player.health += 1;
         myHealthBar.setPercent(player.health);
+        bulletType.kill();
     } else {
         player.kill();
         myHealthBar.clear();
