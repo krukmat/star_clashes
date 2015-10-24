@@ -5,6 +5,7 @@
     <title>Clashes of Stars</title>
 	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script type="text/javascript" src="lib/phaser.min.js"></script>
+    <script src="lib/HealthBar.standalone.js"></script>
     <script type="text/javascript" src="logic/bullets.js"></script>
     <style type="text/css">
         body {
@@ -20,7 +21,7 @@ var height = $(document).height();
 var width = $(document).width();
 
 var game = new Phaser.Game(width, height, Phaser.AUTO, '', { preload: preload, create: create, update: update });
-
+var myHealthBar;
 
 
 function preload() {
@@ -75,6 +76,7 @@ function createRobot(x,y,weapon){
     s.body.collideWorldBounds = true;
     s.body.allowRotation = true;
     s.gun = weapon;
+    s.health = 0;
     return s;
 }
 
@@ -85,8 +87,14 @@ function checkFrame(anim) {
 }
 
 function shootYou(player, bulletType) {
-    robot.kill();
-    location.reload();
+    if (player.health < 100) {
+        player.health += 1;
+        myHealthBar.setPercent(player.health);
+    } else {
+        player.kill();
+        myHealthBar.clear();
+        location.reload();
+    }
 }
 
 function createSprite(x,y, sprite, bulletType) {
@@ -137,9 +145,11 @@ function create() {
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
-
+    var barConfig = {x: 70, y: 70, width: 50, height: 10, flipped: false};
     createLevel(0);
-    robot = createRobot(0, 0, new Weapon.SingleBullet(game));
+    myHealthBar = new HealthBar(game, barConfig);
+    myHealthBar.setPercent(0);
+    robot = createRobot(100, 100, new Weapon.SingleBullet(game));
     cursors = game.input.keyboard.createCursorKeys();
 
 }
@@ -179,6 +189,8 @@ function controlRobot(){
         {
             robot.gun.fire(robot, angle);
         }
+        //myHealthBar.clear();
+        myHealthBar.setPosition(robot.x, robot.y - 10);
 }
 
 function killStructure(structure, player){
