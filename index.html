@@ -32,6 +32,9 @@ function preload() {
     game.load.atlasJSONHash('machine_gun', 'assets/machine_gun/view.png', 'assets/machine_gun/logic.json');
     game.load.atlasJSONHash('sentry_gun', 'assets/sentry_gun/view.png', 'assets/sentry_gun/logic.json');
     game.load.atlasJSONHash('rocket', 'assets/rocket/view.png', 'assets/rocket/logic.json');
+    game.load.atlasJSONHash('soldier', 'assets/soldier/sprites.png', 'assets/soldier/sprites.js');
+    game.load.atlasJSONHash('fly_unit', 'assets/fly_unit/sprites.png', 'assets/fly_unit/sprites.js');
+
 
     game.load.spritesheet('lab', 'assets/lab/view.png', 180, 149);
     game.load.spritesheet('farm', 'assets/farm/view.png', 180, 149);
@@ -63,11 +66,12 @@ var scoreText;
 var start = false;
 var robot;
 var state;
-var levels = [{ buildings:{HQ:1, miner: 2, oreStore: 4, craft: 5, lab: 2, farm: 4}, defenses:{rocket: 1, sentry_gun: 1}},
-              { buildings:{HQ:1, miner: 2, oreStore: 4, craft: 5, lab: 2, farm: 4}, defenses:{rocket: 4, sentry_gun: 5}}
+var levels = [{ buildings:{HQ:1, miner: 2, oreStore: 4, craft: 5, lab: 2, farm: 4}, hostiles:{ soldier: 2, fly_unit: 3} ,defenses:{rocket: 1, sentry_gun: 1}},
+              { buildings:{HQ:1, miner: 2, oreStore: 4, craft: 5, lab: 2, farm: 4}, hostiles:{ soldier: 4} ,defenses:{rocket: 4, sentry_gun: 5}}
              ]
 var defenses = [];
 var buildings = [];
+var hostiles = [];
 var aBot;
 
 
@@ -137,6 +141,16 @@ function createLevel(number) {
            defenses.push(createSprite(game.world.randomX, game.world.randomY, key, gun));
        }
    }
+   // hostiles
+   for (var key in currentLevel.hostiles) {
+       if (key === 'soldier')
+           for (var i=0; i< currentLevel.hostiles[key]; i++)
+               hostiles.push(createSoldier(game.world.randomX, game.world.randomY));
+       else {
+            for (var i=0; i< currentLevel.hostiles[key]; i++)
+               hostiles.push(createFlyUnit(game.world.randomX, game.world.randomY));
+       }
+   }
 }
 
 function createRobot(x,y,weapon){
@@ -159,6 +173,53 @@ function createRobot(x,y,weapon){
 }
 
 
+function createSoldier(x,y){
+    var s =game.add.sprite(x, y, 'soldier');
+    s.scale.setTo(1.0, 1.0);
+    animation = [];
+    for (i=0;i<104;i++)
+        animation.push(i);
+
+    s.animations.add('position1', animation, 10, true);
+    s.animations.play('position1', 10, true);
+    game.physics.arcade.enable(s);
+
+    s.body.collideWorldBounds = true;
+    s.body.allowRotation = true;
+    s.health = 0;
+    var barConfig = {x: x, y: y-10, width: 50, height: 10, flipped: false, bar: {
+      color: '#FFFF00'
+    }};
+    myHealthBar = new HealthBar(game, barConfig);
+    myHealthBar.setPercent(0);
+    s.healthbar = myHealthBar;
+    return s;
+}
+
+function createFlyUnit(x,y){
+    var s =game.add.sprite(x, y, 'fly_unit');
+    s.scale.setTo(1.0, 1.0);
+    animation = [];
+    for (i=0;i<14;i++)
+        animation.push(i);
+
+    s.animations.add('position1', animation, 10, true);
+    s.animations.play('position1', 10, true);
+    game.physics.arcade.enable(s);
+
+    s.body.collideWorldBounds = true;
+    s.body.allowRotation = true;
+    s.health = 0;
+    var barConfig = {x: x, y: y-10, width: 50, height: 10, flipped: false, bar: {
+      color: '#FFFF00'
+    }};
+    myHealthBar = new HealthBar(game, barConfig);
+    myHealthBar.setPercent(0);
+    s.healthbar = myHealthBar;
+    return s;
+}
+
+
 
 function create() {
 
@@ -167,6 +228,7 @@ function create() {
     createLevel(0);
     robot = createRobot(100, 100, new Weapon.SingleBullet(game));
     cursors = game.input.keyboard.createCursorKeys();
+
 
 }
 
@@ -260,14 +322,15 @@ function checkCollide() {
 }
 
 function update() {
-    game.physics.arcade.collide(aBot, robot, checkCollide);
     for (defense in defenses){
         game.physics.arcade.overlap(robot, defenses[defense].bulletType, shootYou, null, this);
         game.physics.arcade.overlap(defenses[defense], robot.gun, killStructure, null, this);
     }
     for (building in buildings){
-        game.physics.arcade.collide(buildings[building], robot, checkCollide);
         game.physics.arcade.overlap(buildings[building], robot.gun, killStructure, null, this);
+    }
+    for (hostile in hostiles){
+        game.physics.arcade.overlap(hostiles[hostile], robot.gun, killStructure, null, this);
     }
 
     controlRobot();
