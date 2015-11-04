@@ -99,6 +99,7 @@ function createSprite(x,y, sprite, bulletType) {
     s.healthbar = myHealthBar;
     s.health = 0;
     game.physics.arcade.enable(s);
+    s.body.immovable = true;
     return s;
 }
 
@@ -118,6 +119,7 @@ function createBuilding(x,y, name) {
     s.body.bounce.y = 0.3;
     s.body.bounce.x = 0.5;
     s.body.collideWorldBounds = true;
+    s.body.immovable = true;
 
     return s;
 }
@@ -238,6 +240,7 @@ function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE);
     aBot = game.add.sprite(0, 50 , 'dude');
     game.physics.arcade.enable(aBot);
+    aBot.body.immovable = true;
 
     robot = game.add.sprite(0, 100 , 'baddie');
     game.physics.arcade.enable(robot);
@@ -259,7 +262,7 @@ var angle = 180;
 function controlRobot(){
         if (game.input.keyboard.isDown(Phaser.Keyboard.LEFT))
         {
-            robot.x -= 4;
+            robot.body.velocity.x = -40;
             if (wasRight)
                 robot.scale.x *= -1;
             wasLeft = true;
@@ -268,7 +271,7 @@ function controlRobot(){
         }
         else if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT))
         {
-            robot.x += 4;
+            robot.body.velocity.x = 40;
             if (wasLeft)
                 robot.scale.x *= -1;
             wasRight = true;
@@ -278,11 +281,11 @@ function controlRobot(){
 
         if (game.input.keyboard.isDown(Phaser.Keyboard.UP))
         {
-            robot.y -= 4;
+            robot.body.velocity.y = -40;
         }
         else if (game.input.keyboard.isDown(Phaser.Keyboard.DOWN))
         {
-            robot.y += 4;
+            robot.body.velocity.y = 40;
         }
         if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
         {
@@ -290,6 +293,7 @@ function controlRobot(){
         }
         if (robot.healthbar)
             robot.healthbar.setPosition(robot.x, robot.y - 10);
+        robot.frame = 4;
 }
 
 
@@ -323,16 +327,17 @@ function checkCollide() {
 
 function update() {
     for (defense in defenses){
+        game.physics.arcade.collide(robot, defenses[defense], checkCollide);
         game.physics.arcade.overlap(robot, defenses[defense].bulletType, shootYou, null, this);
         game.physics.arcade.overlap(defenses[defense], robot.gun, killStructure, null, this);
     }
     for (building in buildings){
+        game.physics.arcade.collide(robot, buildings[building], checkCollide);
         game.physics.arcade.overlap(buildings[building], robot.gun, killStructure, null, this);
     }
     for (hostile in hostiles){
         game.physics.arcade.overlap(hostiles[hostile], robot.gun, killStructure, null, this);
     }
-
     controlRobot();
 }
 
