@@ -58,7 +58,7 @@ Credits.prototype = {
     }
     var bg = game.add.sprite(0, 0, 'gameover-bg');
     this.addCredit('Music', 'Kevin Macleod');
-    this.addCredit('Developer', 'Matt McFarland');
+    this.addCredit('Developer', 'Matias Kruk');
     this.addCredit('Lorem Ipsum', 'Mipsem Dempsum');
     this.addCredit('Caveats', 'Keyboard Cat');
     this.addCredit('Phaser.io', 'Powered By');
